@@ -25,9 +25,6 @@ The course will begin with an overview of genome-wide association studies, an in
 
 
 
-### Overview
-
-
 ### Detailed timetable
 [View Timetable here - ](https://github.com/WCSCourses/PRS2024/blob/main/course_data/PRS2024_timetable_29-05.pdf)
 
@@ -37,8 +34,6 @@ The course will begin with an overview of genome-wide association studies, an in
 
 **LMS**         
 [LMS Link](https://lms.wellcomeconnectingscience.org/)
-
-**DAILY FEEDBACK**        
 
 **Day 1 - GWAS and Relevant Statistics**   
 [Day 1 Part A Online Manual](modules/Day1a.docx.md)     
