@@ -40,8 +40,6 @@ The course will begin with an overview of genome-wide association studies, an in
 
 **DAILY FEEDBACK**        
 
-**NB - Sections being revised for 2024**
-
 **Day 1 - GWAS and Relevant Statistics**   
 [Day 1 Part A Online Manual](modules/Day1a.docx.md)     
 
