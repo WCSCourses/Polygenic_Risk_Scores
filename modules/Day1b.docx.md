@@ -1,4 +1,4 @@
-**Polygenic Risk Score Analyses Workshop 2023**
+**Polygenic Risk Score Analyses Workshop 2024**
 # Practical 1
 ## Introduction to PLINK I: basics
 

@@ -1,4 +1,4 @@
-# Polygenic Risk Score Analyses Workshop 2023
+# Polygenic Risk Score Analyses Workshop 2024
 
 
 # Day 1a: GWAS & relevant Statistics
@@ -45,8 +45,8 @@
 
 ## Looking at the Current Directory
 
- Next we can move into the **~/data/Data_Day1b/** folder (from the data/ folder type: cd Data_Day1b/). We can list out
- the folder content by typing:
+ Next we can move into the **~/data/Day1a_Data/Day1a_Data** folder (from the data/ folder type: cd Day1a_Data/Day1a_Data). We can list out
+ the folder content by typing: 
 
         ls
 
@@ -356,7 +356,7 @@ Simulate binary traits (must be coded with 0 and 1)
 
  to calculate the pseudo R2 for logistic model
 
-       source("Software/nagelkerke.R")
+       source("nagelkerke.R")
 
        reg <- glm(y~x, family=binomial)
 

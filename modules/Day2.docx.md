@@ -43,7 +43,14 @@ To perform PRS analyses, summary statistics from Genome-Wide Association Studies
 ## Data Structure
 You will find all practical materials in the **/home/manager/data/Day2_Target_Data/Day2_Target_Data** directory. Relevant materials that you should see there at the start of the practical are as follows:
 
-> First, download the Base datasets using this [link](https://www.dropbox.com/s/w7g75bo069tupuq/Day2_Base_Data.zip?dl=0).
+> First, download the Base datasets using this command - 
+> ```
+> cd ~/Downloads
+> wget https://wcs_data_transfer.cog.sanger.ac.uk/Day2_Base_Data.zip
+> ```
+> You may also download it via dropbox if the above fails with this
+> [link](https://www.dropbox.com/s/w7g75bo069tupuq/Day2_Base_Data.zip?dl=0).
+> 
 > The data will be downloaded into your "Downloads" folder. You will need to move it to right directory, using the following command.
 > ```
 > cd ~/data/Day2_Target_Data/Day2_Target_Data
@@ -260,10 +267,10 @@ The command above performs clumping on the height GWAS using LD calculated based
 
 Use the commands below to run PRSice with GIANT Height GWAS as base data and the height phenotype as target data. PRSice will calculate Height PRS in the target data and then perform a regression of the Height PRS against the target individual's true height values. From the **/home/manager/data/Day2_Target_Data/Day2_Target_Data** directory, run the following command in the terminal:
 ```
-Rscript ~/PRSice/PRSice.R --prsice ~/PRSice/PRSice_linux --base Base_Data/GIANT_Height.txt --target Target_Data/TAR --snp MarkerName --A1 Allele1 --A2 Allele2 --stat b --beta --pvalue p --pheno Target_Data/TAR.height --binary-target F --bar-levels 5e-8 --no-full --fastscore --out Results/Height.gws
+Rscript ~/PRSice_linux/PRSice.R --prsice ~/PRSice_linux/PRSice_linux --base Base_Data/GIANT_Height.txt --target Target_Data/TAR --snp MarkerName --A1 Allele1 --A2 Allele2 --stat b --beta --pvalue p --pheno Target_Data/TAR.height --binary-target F --bar-levels 5e-8 --no-full --fastscore --out Results/Height.gws
 ```
 
-This command takes the Height GWAS summary statistic file (\--base), informs PRSice of the column name for the column containing the SNP ID(\--snp), the effect allele (--A1), the non-effect allele (\--A2),the effect size (\--stat) and the 𝑃-value (\--pvalue). We also inform PRSice that the effect size is a 𝛽 coefficient (\--beta) instead of an OR. The \--binary-target F command informs PRSice that the target phenotype is a quantitative trait and thus linear regression should be performed. In addition, we ask PRSice not to perform high-resolution scoring over multiple thresholds (\--fastscore), and to compute the PRS using only those SNPs with 𝑃-value \< 5*×*10<sup>−8</sup>.
+This command takes the Height GWAS summary statistic file (\--base), informs PRSice of the column name for the column containing the SNP ID(\--snp), the effect allele (--A1), the non-effect allele (\--A2), the effect size (\--stat) and the 𝑃-value (\--pvalue). We also inform PRSice that the effect size is a 𝛽 coefficient (\--beta) instead of an OR. The \--binary-target F command informs PRSice that the target phenotype is a quantitative trait and thus linear regression should be performed. In addition, we ask PRSice not to perform high-resolution scoring over multiple thresholds (\--fastscore), and to compute the PRS using only those SNPs with 𝑃-value \< 5*×*10<sup>−8</sup>.
 
 ---
 > 
@@ -272,7 +279,7 @@ This command takes the Height GWAS summary statistic file (\--base), informs PRS
 > To see a full list of command line options available in PRSice, type: 
 > 
 >  ```
-> ~/PRSice/PRSice_linux -h
+> ~/PRSice_linux/PRSice
 >  ```
 >  
 >  Take some time to have a look through some of these user options. By looking at the user options, work out which user option or options were used to ensure that the command above only calculated 1 PRS at genome-wide significance of \< 5*×*10<sup>−8</sup>.
@@ -327,7 +334,7 @@ A disadvantage of using only genome-wide significant SNPs is that there are like
 
 This process is implemented in PRSice and can be performed automatically as follows:
 ```
-Rscript ~/PRSice/PRSice.R --prsice ~/PRSice/PRSice_linux --base Base_Data/GIANT_Height.txt --target Target_Data/TAR --snp MarkerName --A1 Allele1 --A2 Allele2 --stat b --beta --pvalue p --pheno Target_Data/TAR.height --binary-target F --fastscore --out Results/Height.fast 
+Rscript ~/PRSice_linux/PRSice.R --prsice ~/PRSice_linux/PRSice_linux --base Base_Data/GIANT_Height.txt --target Target_Data/TAR --snp MarkerName --A1 Allele1 --A2 Allele2 --stat b --beta --pvalue p --pheno Target_Data/TAR.height --binary-target F --fastscore --out Results/Height.fast 
 ```
 
 By removing the \--bar-levels and \--no-full command, we ask PRSice to perform PRS calculation with a number of predefined thresholds (0.001,0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 1). The **.prsice** file is very similar to the **.summary** file, the only difference is that **.prsice** file reports the results of model fits for **all thresholds** instead of the most predictive threshold. This allow us to observe the change in model fitting across different thresholds, visualized by the BARPLOT (<a href="#top">[Figure 1.1](#_Figure-1.1)</a>) generated by PRSice
@@ -362,7 +369,7 @@ By removing the \--bar-levels and \--no-full command, we ask PRSice to perform P
 
 If we limit ourselves to a small number of 𝑃-value thresholds, we might \"miss\" the most predictive threshold. In order to identify this \"best\" threshold, we will need \"high-resolution scoring\", that is, to test the predictive power of PRS generated under a larger number of p-value thresholds. We can achieve that by simply removing the \--fastscore command from the PRSice script:
 ```
- Rscript ~/PRSice/PRSice.R --prsice ~/PRSice/PRSice_linux --base Base_Data/GIANT_Height.txt --target Target_Data/TAR --snp MarkerName --A1 Allele1 --A2 Allele2 --stat b --beta --pvalue p --pheno Target_Data/TAR.height --binary-target F --out Results/Height.highres
+ Rscript ~/PRSice_linux/PRSice.R --prsice ~/PRSice_linux/PRSice_linux --base Base_Data/GIANT_Height.txt --target Target_Data/TAR --snp MarkerName --A1 Allele1 --A2 Allele2 --stat b --beta --pvalue p --pheno Target_Data/TAR.height --binary-target F --out Results/Height.highres
 ```
 
  When PRSice performs high-resolution scoring, it will generate a plot ([Figure 1.2.1](#_bookmark15)) presenting the model fit of PRS calculated at all P-value thresholds.
@@ -411,7 +418,7 @@ If we limit ourselves to a small number of 𝑃-value thresholds, we might \"mis
 
 When performing PRS, one might want to account for covariates. Based on user inputs, PRSice can automatically incorporate covariates into its model. For example, the following commands will include sex into the regression model as a covariate:
 ```
-Rscript ~/PRSice/PRSice.R --prsice ~/PRSice/PRSice_linux --base Base_Data/GIANT_Height.txt --target Target_Data/TAR --snp MarkerName --A1 Allele1 --A2 Allele2 --stat b --beta --pvalue p --pheno Target_Data/TAR.height --binary-target F --cov Target_Data/TAR.covariate --cov-col Sex --out Results/Height.sex
+Rscript ~/PRSice_linux/PRSice.R --prsice ~/PRSice_linux/PRSice_linux --base Base_Data/GIANT_Height.txt --target Target_Data/TAR --snp MarkerName --A1 Allele1 --A2 Allele2 --stat b --beta --pvalue p --pheno Target_Data/TAR.height --binary-target F --cov Target_Data/TAR.covariate --cov-col Sex --out Results/Height.sex
 ```
 When covariates are included in the analysis, PRSice will use the model fit of **only PRS** for all its output. This 𝑃𝑅𝑆.𝑅<sup>2</sup> is calculated by substracting the 𝑅<sup>2</sup> of the null model (e.g. 𝐻𝑒𝑖𝑔ℎ𝑡 *∼* 𝑆𝑒𝑥) from the 𝑅<sup>2</sup> of the full model (e.g.𝐻𝑒𝑖𝑔ℎ𝑡 *∼* 𝑆𝑒𝑥 + 𝑃𝑅𝑆)
 
@@ -446,7 +453,7 @@ To generate quantile plots in PRSice, simply add *\--quantile 10* option.
 ---
 
 ```
-Rscript ~/PRSice/PRSice.R --prsice ~/PRSice/PRSice_linux --base Base_Data/GIANT_Height.txt --target Target_Data/TAR --snp MarkerName --A1 Allele1 --A2 Allele2 --stat b --beta --pvalue p --pheno Target_Data/TAR.height --binary-target F --cov Target_Data/TAR.covariate --cov-col Sex --plot --quantile 10 --out Results/Height.sex
+Rscript ~/PRSice_linux/PRSice.R --prsice ~/PRSice_linux/PRSice_linux --base Base_Data/GIANT_Height.txt --target Target_Data/TAR --snp MarkerName --A1 Allele1 --A2 Allele2 --stat b --beta --pvalue p --pheno Target_Data/TAR.height --binary-target F --cov Target_Data/TAR.covariate --cov-col Sex --plot --quantile 10 --out Results/Height.sex
 ```
 
  **Figure 1.3: Example of a quantile plot generated by PRSice**
@@ -460,7 +467,7 @@ Rscript ~/PRSice/PRSice.R --prsice ~/PRSice/PRSice_linux --base Base_Data/GIANT_
 
  A disadvantage of the quantile plot is that it only separate samples into quantiles of equal size. However, it is sometimes interesting to investigate whether a specific strata (e.g. top 5% of samples),contain a higher PRS than the reference strata. For example, ([**Mavaddat, N et al., 2015**](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4754625/?report=reader)) found that samples in the highest 1% of PRS distribution have a 2.81 increased OR of breast cancer when comparing to samples at the middle quantiles (40th to 60th percentile). We can mimic their table by using *\--quant-break*, which represents the upper bound of each strata, and *\--quant-ref*, which represents the upper bound of the reference quantile:
 ```
-Rscript ~/PRSice/PRSice.R --prsice ~/PRSice/PRSice_linux --base Base_Data/GIANT_Height.txt --target Target_Data/TAR --snp MarkerName --A1 Allele1 --A2 Allele2 --stat b --beta --pvalue p --pheno Target_Data/TAR.height --binary-target F --cov Target_Data/TAR.covariate --cov-col Sex --plot --quantile 100 --quant-break 1,5,10,20,40,60,80,90,95,99,100 --quant-ref 60 --out Results/Height.sex
+Rscript ~/PRSice_linux/PRSice.R --prsice ~/PRSice_linux/PRSice_linux --base Base_Data/GIANT_Height.txt --target Target_Data/TAR --snp MarkerName --A1 Allele1 --A2 Allele2 --stat b --beta --pvalue p --pheno Target_Data/TAR.height --binary-target F --cov Target_Data/TAR.covariate --cov-col Sex --plot --quantile 100 --quant-break 1,5,10,20,40,60,80,90,95,99,100 --quant-ref 60 --out Results/Height.sex
 ```
 
  **Figure 1.4: Example of a strata plot generated by PRSice**
@@ -492,7 +499,7 @@ Rscript ~/PRSice/PRSice.R --prsice ~/PRSice/PRSice_linux --base Base_Data/GIANT_
 ---
 
 ```
-Rscript ~/PRSice/PRSice.R --prsice ~/PRSice/PRSice_linux --base Base_Data/cad.add.txt --target Target_Data/TAR --snp markername --A1 effect_allele --A2 noneffect_allele --chr chr --bp bp_hg19 --stat beta --beta --pvalue p_dgc --pheno Target_Data/CAD.pheno --binary-target T --out Results/CAD.highres
+Rscript ~/PRSice_linux/PRSice.R --prsice ~/PRSice_linux/PRSice_linux --base Base_Data/cad.add.txt --target Target_Data/TAR --snp markername --A1 effect_allele --A2 noneffect_allele --chr chr --bp bp_hg19 --stat beta --beta --pvalue p_dgc --pheno Target_Data/CAD.pheno --binary-target T --out Results/CAD.highres
 ```
 ---
 >
@@ -534,7 +541,7 @@ Rscript ~/PRSice/PRSice.R --prsice ~/PRSice/PRSice_linux --base Base_Data/cad.ad
 > 
 ---
 ```
-Rscript ~/PRSice/PRSice.R --prsice ~/PRSice/PRSice_linux --base Base_Data/GIANT_Height.txt --target Target_Data/TAR --snp MarkerName --A1 Allele1 --A2 Allele2 --stat b --beta --pvalue p --pheno Target_Data/CAD.pheno --binary-target T --out Results/Cross.highres
+Rscript ~/PRSice_linux/PRSice.R --prsice ~/PRSice_linux/PRSice_linux --base Base_Data/GIANT_Height.txt --target Target_Data/TAR --snp MarkerName --A1 Allele1 --A2 Allele2 --stat b --beta --pvalue p --pheno Target_Data/CAD.pheno --binary-target T --out Results/Cross.highres
 ```
 ---
 

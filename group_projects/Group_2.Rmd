@@ -1,0 +1,154 @@
+---
+title: "Elastic Net"
+output:
+  pdf_document: default
+  html_document: default
+date: "2024-06-13"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+```{R }
+library(readr) ## Reading the URL link from the github
+library(dplyr) ## Sting namupulation of strings. 
+library(glmnet) ## Loading the lassso and ridge regression
+library(caret)
+
+## Setting the working directory
+setwd("C:/Users/HAgasi/Downloads")
+## Reading in the dataset
+data <- read.table("wbcdta.txt",sep=" ",header=T)
+
+print(dim(data))
+head(data)
+```
+```{R}
+## Filtering out the pgs_cols and the trait of interest
+pgs_cols <- grep("PGS",names(data),value=TRUE)
+
+## Preparing the data for spliting
+pred <- as.matrix(data[,3:19])
+dv <- data[,2]
+
+## Number of row
+n <- dim(data)[1]
+
+train_rows <- sample(1:n, .6*n, replace = F)
+#train_rows <- createDataPartition(dv, p = 0.8, list = FALSE, times = 1)
+
+pred.train <- pred[train_rows,]
+dv.train <- dv[train_rows]
+
+pred.test <- pred[-train_rows,]
+dv.test <- dv[-train_rows]
+
+```
+
+
+
+```{R}
+set.seed(42)
+cv_fit <- cv.glmnet(x_train, y_train, alpha = 0.5, nfolds = 5)
+
+# Print the results of cross-validation
+print(cv_fit)
+
+# Plot the cross-validation curve
+plot(cv_fit)
+
+# Extract the best lambda value
+best_lambda <- cv_fit$lambda.min
+print(best_lambda)
+
+
+# Fit the final model using the best lambda
+final_model <- glmnet(x_train, y_train, alpha = 0.5, lambda = best_lambda)
+
+# Summary of the final model
+print(final_model)
+
+coef(final_model)
+
+
+```
+
+
+```{R}
+
+agg.pgs = Intercept*(0.04592274*data$PGS002357 
+                    + -0.02808113*data$PGS002527 
+                    + 0.09822043*data$PGS002625
+                    + 0.05841898*data$PGS002674 ) 
+
+data$APGS <- agg.pgs
+
+```
+
+
+```{R}
+prs.Fresult <- NULL
+
+compute_r2 <- function(predictor, data) {
+  # Ensure the predictor is passed as a character string representing the column name
+  df <- data
+  
+  # Fit the null model
+  null_model <- lm(dv ~ age + sex + PC1 + PC2 + PC3 + PC4 + PC5 + PC6 + PC7 + PC8 + PC9 + PC10, data = df)
+  
+  # Fit the model with the predictor included
+  model_formula <- as.formula(paste("dv ~", predictor, "+ age + sex + PC1 + PC2 + PC3 + PC4 + PC5 + PC6 + PC7 + PC8 + PC9 + PC10"))
+  model <- lm(model_formula, data = df)
+  
+  # Calculate R-squared values
+  model.r2 <- summary(model)$r.squared
+  null.r2 <- summary(null_model)$r.squared
+  prs.r2 <- model.r2 - null.r2
+  
+  # Extract coefficient and p-value for the predictor
+  prs.coef <- summary(model)$coeff[predictor, ]
+  prs.beta <- as.numeric(prs.coef[1])
+  prs.se <- as.numeric(prs.coef[2])
+  prs.p <- as.numeric(prs.coef[4])
+  
+  # Create a result data frame
+  prs.result <- data.frame(
+    Predictor = predictor,
+    R2 = prs.r2,
+    P = prs.p,
+    BETA = prs.beta,
+    SE = prs.se
+  )
+  
+  return(prs.result)
+  #prs.Fresult <- rbind(prs.result)
+}
+
+```
+
+
+```{R}
+
+
+d_list <- c("PGS002357","PGS002527","PGS002625","PGS002674", "APGS")
+
+
+
+#Use lapply to apply the function to each predictor
+results_list <- lapply(d_list, compute_r2, data = data)
+
+# Combine the list of data frames into a single data frame
+results <- do.call(rbind, results_list)
+
+# Print the combined results
+print(results)
+
+
+
+```
