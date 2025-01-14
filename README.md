@@ -36,13 +36,13 @@ The course will run over 5 days and will include lectures, tutorials, computatio
 - Apply relevant tools and software to analyse complex global (diverse and admixed) population genomics datasets.
 - Evaluate and interpret results generated from PRS analyses.
 - Customise visualisation of results from PRS analyses.
-
 **Course Runs**      
 
 | Course Date | Course Title | Location |Citation DOI |
 |-------------|--------------|----------|-------------|
-| 9–14 June 2024  | [Polygenic Risk Scores Africa 2024](https://coursesandconferences.wellcomeconnectingscience.org/event/polygenic-risk-score-analysis-africa-20240609/) | Makerere University, Kampala, Uganda |[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.12723490.svg)](https://doi.org/10.5281/zenodo.12723490)|
-| 2–7 July 2023 | [Polygenic Risk Scores Africa 2023](https://coursesandconferences.wellcomeconnectingscience.org/event/polygenic-risk-score-analysis-africa-20230702/) | Makerere University, Kampala, Uganda | [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.12667215.svg)](https://doi.org/10.5281/zenodo.12667215)|
+| 2–7 July 2023 | [Polygenic Risk Scores Africa 2023](https://github.com/WCSCourses/PRS_2023) | Makerere University, Kampala, Uganda | [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.12667215.svg)](https://doi.org/10.5281/zenodo.12667215)|
+| 9–14 June 2024  | [Polygenic Risk Scores Africa 2024](https://github.com/WCSCourses/PRS_2024) | Makerere University, Kampala, Uganda |[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.12723490.svg)](https://doi.org/10.5281/zenodo.12723490)|
+| 22-27 June 2025 | [Polygenic Risk Scores Africa 2023](https://github.com/WCSCourses/PRS_2025) | Makerere University, Kampala, Uganda | coming soon..|
 
 ******
 
