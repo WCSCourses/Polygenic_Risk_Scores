@@ -2,7 +2,7 @@
 
 ## Day 3 - Polygenic Risk Score Analyses Workshop 2025
 
-## Table of Contents
+## Table of Content
 
   1. [Key Learning Outcomes](#Key-learning-outcomes)
   2. [Base and Target datasets](#Base-and-target-datasets)
