@@ -1,0 +1,490 @@
+---
+title: "Group 1 Project"
+author: "Isaac, Cephas, Mini, Faith, Evelyn, Precious"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 2
+    number_sections: true
+    theme: cerulean
+  pdf_document:
+    toc: true
+    number_sections: true
+---
+## About Elastic Net
+Elastic Net regression is a classification algorithm that overcomes the limitations of the lasso(least absolute shrinkage and selection operator) method which uses a penalty function in its L1 regularization. Elastic Net regression is a hybrid approach that blends both penalization of the L2 and L1 regularization of lasso and ridge methods. It finds an estimator in a two-stage procedure i.e first for each fixed λ2 it finds the ridge regression coefficients and then does a lasso regression type shrinkage which does a double amount of shrinkage which eventually leads to increased bias and poor predictions. Re-scaling the coefficients of the naive version of the elastic net by multiplying the estimated coefficients by (1 + λ2) is done to improve the prediction performance.
+
+## Intalling Pakages
+Make sure all required packages are installed
+
+```{r packages, echo=FALSE}
+install.packages("dplyr")    # modern data wrangling verbs (%>% , select, mutate …)
+install.packages("glmnet")   # fits the elastic-net / lasso / ridge family
+install.packages("ggplot2")  # base grammar of graphics (caret can auto-use it)
+install.packages("caret")    # high-level wrapper for ML workflows, CV, tuning
+install.packages("psych")
+install.packages("skimr")
+install.packages("summarytools")
+install.packages("magick")
+
+#Loading packages
+library(dplyr)
+library(psych)
+library(magick)
+library(summarytools)
+library(ggplot2)
+library(glmnet)
+library(pROC)
+library(psych)
+library(magick)
+library(caret)
+```
+
+## Exploratory data analysis
+We conducted multiple exploratory analyses to determine data distribution
+
+```{r EDA, echo=FALSE}
+# Read the PRS + HbA1c data from a space/tab-delimited text file
+df <- read.table("hba1cdta.txt", header = TRUE, sep = "", stringsAsFactors = FALSE)
+
+# Peek at first 5 rows
+head(df, 5)
+
+# Check structure
+str(df)
+
+# Summarize all numeric variables
+describe(df)
+```
+
+## Exploratory data analysis
+Visualizations
+The purpose is to show the distribution and the proportion of one's red blood cells that have glucose-coated hemoglobin, reflecting your average blood sugar levels over the past 2-3 months. 
+The average blood sugar (glucose), HbA1c can be expressed as a percentage. 
+
+```{r Visualisation, echo=FALSE}
+
+library(ggplot2)
+
+# Plot 1: Histogram of HbA1c (count)
+p1 <- ggplot(df, aes(x = HbA1c)) +
+  geom_histogram(binwidth = 1, fill = "steelblue", color = "white") +
+  labs(
+    title = "Distribution of HbA1c",
+    x = "Glycated hemoglobin (HbA1c)",
+    y = "Count"
+  ) +
+  theme_minimal()
+
+# Save Plot 1
+ggsave("HbA1c_histogram_count.png", plot = p1, width = 8, height = 5, dpi = 300)
+
+# Plot 2: Percentage + density overlay
+p2 <- ggplot(df, aes(x = HbA1c)) +
+  geom_histogram(aes(y = after_stat((count / sum(count)) * 100)), 
+                 binwidth = 1, 
+                 fill = "blue", 
+                 color = "white", 
+                 alpha = 0.6) +
+  geom_density(aes(y = after_stat(density * 100)),  # scale density to percentage
+               color = "red", size = 0.7) +
+  labs(
+    title = "Distribution of HbA1c",
+    x = "Glycated hemoglobin (HbA1c)",
+    y = "Percentage (%)"
+  ) +
+  theme_minimal()
+
+# Save the histogram
+ggsave("HbA1c_histogram_percent_density.png", plot = p2, width = 8, height = 5, dpi = 300)
+#Note: Increase the intervals
+```
+
+```{r}
+
+# Boxplot of HbA1c by Sex
+
+p3 <- ggplot(df, aes(x = factor(sex), y = HbA1c)) +
+  geom_boxplot(fill = "darkorange") +
+  labs(
+    title = "HbA1c by Sex",
+    x = "Sex",
+    y = "HbA1c (%)"
+  ) +
+  theme_minimal()
+
+# Save the boxplot
+ggsave("HbA1c_by_Sex_Boxplot.png", plot = p3, width = 6, height = 4, dpi = 300)
+```
+
+```{r}
+## Scatter Plot of HbA1c by Age to see how HbA1c changes with continuous age,ra
+p4 <- ggplot(df, aes(x = age, y = HbA1c)) +
+  geom_point(alpha = 0.4, color = "blue") +      # scatter points
+  geom_smooth(method = "loess", color = "red") +  # smooth curve
+  labs(title = "HbA1c by Age", x = "Age (Years)", y = "HbA1c (%)") +
+  theme_minimal()
+
+# Save the scatterplot
+ggsave("Scatter Plot of HbA1c by Age.png", plot = p4, width = 6, height = 4, dpi = 300)
+
+```
+
+```{r Visualisation2, echo=FALSE}
+# Step 1: Create 10-year age groups
+df_grouped <- df %>% 
+  mutate(age_group = cut(age,
+           breaks = seq(10, 95, by = 5),   # 5-year bins
+           right  = FALSE,                   # interval is [lower, upper)
+           include.lowest = TRUE
+         )) %>% 
+  group_by(age_group) %>% 
+  summarise(mean_HbA1c = mean(HbA1c, na.rm = TRUE),
+            n          = n()) %>%            # handy to know sample size
+  filter(!is.na(age_group))
+
+# Step 2. Plot mean HbA1c by 10-year group
+p5 <- ggplot(df_grouped, aes(x = age_group, y = mean_HbA1c, group = 1)) +
+  geom_line(color = "red", size = 0.7) +
+  geom_point(color = "black", size = 2) +
+  labs(title = "Mean HbA1c by 5-Year Age Group",
+       x = "Age Group (years)",
+       y = "Mean HbA1c (%)") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+# Save the plot for group
+ggsave("HbA1c by 5-year group.png", plot = p5, width = 6, height = 4, dpi = 300)
+```
+
+```{r Data Split, echo=FALSE}
+
+# 1. Load packages (if not loaded)
+# 2. Prepare outcome vector (y) and predictor matrix (X)
+y <- df$HbA1c                           # outcome (numeric vector)
+X <- df %>%
+  select(starts_with("PGS")) %>%
+  as.matrix()                       # predictors as numeric matrix
+
+# 3. Create train/test split (80% train, 20% test)
+set.seed(123)                         # for reproducibility
+train_idx <- createDataPartition(y, p = 0.8, list = FALSE)
+
+X_train <- X[train_idx, ]
+y_train <- y[train_idx]
+
+X_test  <- X[-train_idx, ]
+y_test  <- y[-train_idx]
+```
+#NONE ACCOUNT OF COVARIATES
+Here we show the predictive accuracy of the models without accounting for covariates i.e. age, sex, PCs
+# Single PGS Prediction
+```{r Linear Regression Models, echo=FALSE}
+#Linear Regression Models for Individual PGS
+
+# Get individual PGS names
+pgs_names <- colnames(X_train)
+
+# Prepare a vector to store R² values and VIP
+r2_individual <- numeric(length(pgs_names))
+vip_scores    <- numeric(length(pgs_names))  # |t-value| for each PGS
+
+# Standardize predictors (mean=0, sd=1) before modeling
+X_train_scaled <- scale(X_train)
+X_test_scaled  <- scale(X_test, center = attr(X_train_scaled, "scaled:center"),
+                                 scale  = attr(X_train_scaled, "scaled:scale"))
+# Use scaled data in loop
+for (i in seq_along(pgs_names)) {
+  single_train <- data.frame(y = y_train, x = X_train_scaled[, i])
+  single_test  <- data.frame(x = X_test_scaled[, i])
+  
+  lm_fit <- lm(y ~ x, data = single_train)
+  y_pred_i <- predict(lm_fit, newdata = single_test)
+  
+  r2_individual[i] <- cor(y_test, y_pred_i)^2
+}
+
+```
+##Plot R2 (Perfromace Metrics of linear model) for each PGS
+
+```{r}
+# Combine results into a dataframe
+r2_df <- data.frame(
+  Predictor = pgs_names,
+  R2 = r2_individual
+)
+
+# Print first few rows
+print(head(r2_df))
+
+Single_PGS <-ggplot(r2_df, aes(x = reorder(Predictor, R2), y = R2, fill = R2)) +
+  geom_col() +
+  geom_text(aes(label = round(R2, 3)), 
+            hjust = -0.1, size = 3) +  # label outside bars
+  coord_flip() +
+  scale_fill_gradient(low = "darkgreen", high = "brown") +
+  labs(title = "Individual PGS Performance",
+       x = "Individual PGS",
+       y = expression(R^2),
+       fill = "R² Value") +
+  theme_minimal() +
+  theme(axis.text.y = element_text(size = 10)) +
+  ylim(0, max(r2_df$R2) * 1.1)  # Add some space for the text labels
+
+# Save Single PGS Performance
+ggsave("Single_PGS_R2.png", plot = Single_PGS, width = 8, height = 5, dpi = 300)
+```
+# Integrated PGS Prediction (PRSMix)
+Having all PGS as predictors, without covariates
+
+```{r Combined PGS_NonCovariates, echo=FALSE}
+
+## Cross-validation settings
+cv_ctrl <- trainControl(
+  method      = "repeatedcv",   # 5-fold CV × 5 repeats
+  number      = 5,
+  repeats     = 5,
+  search      = "random",       # 25 random α/λ combos
+  verboseIter = FALSE
+)
+
+## Fit elastic-net model with caret (x / y interface)
+set.seed(123)                                # reproducibility inside caret
+enet_fit <- train(
+  x          = X_train,
+  y          = y_train,
+  method     = "glmnet",
+  preProcess = c("center", "scale"),          # scale predictors inside CV
+  tuneLength = 25,
+  trControl  = cv_ctrl
+)
+
+print(enet_fit)        # cross-validated performance & best α, λ
+
+## Evaluate on unseen test data
+y_pred <- predict(enet_fit, X_test)
+
+r2_test <- cor(y_test, y_pred)^2
+cat("PRSMix without covariates Performance =", round(r2_test, 3), "\n")
+```
+## Why Elastic Net
+Elastic Net is a multivariable (multivariate) machine learning method that performs regularized regression using multiple predictors at once.
+
+It is not designed for univariate prediction (i.e., one predictor at a time).
+
+## What Elastic Net Does:
+
+Elastic Net combines:
+- Lasso (L1) regularization → variable selection (some coefficients shrink to 0)
+- Ridge (L2) regularization → shrinks coefficients of correlated variables
+
+It solves this optimization problem:
+
+y = outcome (e.g., HbA1c)
+X = many predictors at once (PGS scores in your case)
+β = vector of coefficients
+
+#PLOTTING TO COMPARE PERFORMANCE OF COMBINED-PGS MODEL AND SINGLE PGS MODELS without covariates
+```{r}
+# Combine elastic-net R² with individual R²
+
+# Plot
+
+# Create R² results data frame
+r2_all <- data.frame(
+  Predictor = c(pgs_names, "PRSmix"),  
+  R2        = c(r2_individual, r2_test)
+)
+
+# Reorder Predictor factor levels for plotting
+r2_all$Predictor <- factor(r2_all$Predictor,
+                           levels = r2_all$Predictor[order(r2_all$R2, decreasing = TRUE)])
+
+# Plot with labeled bars and highlighted Elastic Net model
+Mix_vs_Single <- ggplot(r2_all, aes(x = Predictor, y = R2,
+                   fill = Predictor == "ElasticNet_Combined")) +
+  geom_bar(stat = "identity") +
+  geom_text(aes(label = round(R2, 3)),
+            vjust = -0.3, size = 2.5) +  # vjust controls vertical placement
+  scale_fill_manual(values = c("steelblue", "darkred"), guide = FALSE) +
+  labs(title = "Predictive Performance (Individual PGS vs PRSmix Model)",
+       x = "Predictor",
+       y = expression(R^2)) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+# Save Plot 2
+ggsave("PRSMix and Single PRS C.png", plot = Mix_vs_Single, width = 8, height = 5, dpi = 300)
+```
+
+#PRSmix Performance controlled for Covariates with Elastic Net
+In the following codes, each chunk computes the performance (R2) of the PRSmix model controlled for each covariates provided (age, sex, PCs) and then controlled for all of them combined.
+
+```{r}
+library(dplyr)
+library(caret)
+library(glmnet)
+
+set.seed(123)
+idx_train <- createDataPartition(df$HbA1c, p = 0.80, list = FALSE)
+
+y_train <- df$HbA1c[idx_train]
+y_test  <- df$HbA1c[-idx_train]
+
+# Cross-validation control (define once)
+cv_ctrl <- trainControl(
+  method      = "repeatedcv",
+  number      = 5,
+  repeats     = 5,
+  search      = "random",
+  verboseIter = FALSE
+)
+
+# Ensure sex is factor
+if (!is.factor(df$sex)) {
+  df$sex <- as.factor(df$sex)
+}
+```
+
+# Predictive Performance of the PRSmix without controlling for covariates 
+```{r}
+# Select PGS columns and convert to data frame
+X_pgs <- df %>% select(starts_with("PGS")) %>% as.data.frame()
+
+# Split train/test
+X_pgs_train <- X_pgs[idx_train, ]
+X_pgs_test  <- X_pgs[-idx_train, ]
+
+# Fit Elastic Net
+set.seed(123)
+enet_pgs <- train(
+  x          = X_pgs_train,
+  y          = y_train,
+  method     = "glmnet",
+  preProcess = c("center", "scale"),
+  tuneLength = 25,
+  trControl  = cv_ctrl
+)
+
+# Predict and evaluate
+y_pred_pgs <- predict(enet_pgs, newdata = X_pgs_test)
+r2_pgs <- cor(y_test, y_pred_pgs)^2
+cat("Predictive Performance - R² (PRSmix_only):", round(r2_pgs, 5), "\n")
+
+```
+
+#PRSmix controlled for Sex Performance
+```{r}
+# Select PGS + sex columns
+X_pgs_sex <- df %>% select(starts_with("PGS"), sex) %>% as.data.frame()
+
+# Split train/test
+X_pgs_sex_train <- X_pgs_sex[idx_train, ]
+X_pgs_sex_test  <- X_pgs_sex[-idx_train, ]
+
+# Fit Elastic Net
+set.seed(123)
+enet_pgs_sex <- train(
+  x          = X_pgs_sex_train,
+  y          = y_train,
+  method     = "glmnet",
+  preProcess = c("center", "scale"),  # sex won't be scaled since it's factor
+  tuneLength = 25,
+  trControl  = cv_ctrl
+)
+
+# Predict and evaluate
+y_pred_pgs_sex <- predict(enet_pgs_sex, newdata = X_pgs_sex_test)
+r2_pgs_sex <- cor(y_test, y_pred_pgs_sex)^2
+cat("Predictive Performance - R² (PRSmix + Sex):", round(r2_pgs_sex, 5), "\n")
+
+```
+#PRSmix controlled for Sex and Age Performance
+```{r}
+# Select PGS + sex + age columns
+X_pgs_sex_age <- df %>% select(starts_with("PGS"), sex, age) %>% as.data.frame()
+
+# Split train/test
+X_pgs_sex_age_train <- X_pgs_sex_age[idx_train, ]
+X_pgs_sex_age_test  <- X_pgs_sex_age[-idx_train, ]
+
+# Fit Elastic Net
+set.seed(123)
+enet_pgs_sex_age <- train(
+  x          = X_pgs_sex_age_train,
+  y          = y_train,
+  method     = "glmnet",
+  preProcess = c("center", "scale"),
+  tuneLength = 25,
+  trControl  = cv_ctrl
+)
+
+# Predict and evaluate
+y_pred_pgs_sex_age <- predict(enet_pgs_sex_age, newdata = X_pgs_sex_age_test)
+r2_pgs_sex_age <- cor(y_test, y_pred_pgs_sex_age)^2
+cat("Predictive Performance - R² (PGS + Sex + Age):", round(r2_pgs_sex_age, 5), "\n")
+
+```
+#PRSmix controlled for Sex, Age and PCs Performance
+```{r}
+# Select PGS + sex + age + PC1-PC10 columns
+X_full <- df %>% select(starts_with("PGS"), sex, age, PC1:PC10) %>% as.data.frame()
+
+# Split train/test
+X_full_train <- X_full[idx_train, ]
+X_full_test  <- X_full[-idx_train, ]
+
+# Fit Elastic Net
+set.seed(123)
+enet_full <- train(
+  x          = X_full_train,
+  y          = y_train,
+  method     = "glmnet",
+  preProcess = c("center", "scale"),
+  tuneLength = 25,
+  trControl  = cv_ctrl
+)
+
+# Predict and evaluate
+y_pred_full <- predict(enet_full, newdata = X_full_test)
+r2_full <- cor(y_test, y_pred_full)^2
+cat("Predictive Performance - R² (PGS + Sex + Age + PCs):", round(r2_full, 5), "\n")
+```
+#PLOT TO COMPARE PERFOMANCE OF PRSMIX VS OTHERS (EFFECT OF COVARAITES)
+
+Create a combined results table using already calculated values
+
+```{r}
+library(tidyr)
+library(ggplot2)
+
+# Create a data frame of R2 values and model names
+r2_summary <- data.frame(
+  Model = c("PGS only", "PGS + Sex", "PGS + Sex + Age", "PGS + Sex + Age + PCs"),
+  R2 = c(r2_pgs, r2_pgs_sex, r2_pgs_sex_age, r2_full)
+)
+
+# Plot R² comparison
+PRSmix_covariates <- ggplot(r2_summary, aes(x = reorder(Model, R2), y = R2, fill = R2)) +
+  geom_col() +
+  geom_text(aes(label = round(R2, 3)), vjust = -0.1) +
+  scale_fill_gradient(low = "brown", high = "darkgreen") +
+  labs(
+    title = "Predictive Performance - R² Comparison Across Models",
+    x = "PRSmix_Model",
+    y = expression(R^2)
+  ) +
+  theme_minimal() +
+  coord_flip()
+
+# Save the plot
+ggsave("R² comparison.png", plot = PRSmix_covariates, width = 8, height = 5, dpi = 300)
+
+```
+
+#REFERENCES
+https://rpubs.com/jmkelly91/881590
+https://www.geeksforgeeks.org/elastic-net-regression-in-r-programming/
+https://bradleyboehmke.github.io/HOML/linear-regression.html
+
